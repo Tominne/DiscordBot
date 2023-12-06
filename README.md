@@ -1,1 +1,2 @@
 # RealBot
+A discord bot
