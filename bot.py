@@ -6,6 +6,9 @@ from dotenv import load_dotenv
 from openai import Completion
 import random
 from arts import ascii_arts
+import io
+import base64
+from api_img import call_api_and_get_image_data
 
 load_dotenv()
 
@@ -70,9 +73,6 @@ async def chat(message: discord.Message, text=None):
             await message.channel.send("Please provide a question using the >>ask command")
             return
 
-    # get reponse from openai's text-davinci-003 aka GPT-3
-    # You can play around with the filter to get a better result
-    # Visit https://beta.openai.com/docs/api-reference/completions/create for more info
     response = Completion.create(
         engine="text-davinci-003",
         prompt=text,
@@ -105,13 +105,72 @@ async def art(message: discord.Message):
     await message.channel.send(f"Here is your {art_type} art:\n```\n{art}\n```")
 
 
-# start the bot
-client.run(TOKEN)
 
 
+async def api_art(message: discord.Message):
+    # split the message content into command and art_type
+    split_message = message.content.split(" ", maxsplit=1)
+
+    # check if art_type is provided
+    if len(split_message) < 2:
+        await message.channel.send("Please provide the type of art after the >>apiart command")
+        return
+
+    command, art_type = split_message
+
+    try:
+        # Call the API and get the image data
+        image_data = call_api_and_get_image_data(art_type)
+
+        # Create a BytesIO object from the image data
+        image_bytes = io.BytesIO(base64.b64decode(image_data))
+
+        # Create a discord.File object from the BytesIO object
+        image_file = discord.File(image_bytes, filename='art.png')
+
+        # Send the image
+        await message.channel.send(file=image_file)
+    except Exception as e:
+        if "Non-200 response: " in str(e):
+            await message.channel.send("That's a very naughty request.")
+        else:
+            await message.channel.send("An error occurred: " + str(e))
 
 
+    # Send the image
+    await message.channel.send(file=image_file)
 
+@client.event
+async def on_message(message: discord.Message):
+    """
+    Listen to message event
+    """
+    # ignore messages from the bot itself
+    if message.author == client.user:
+        return 
+
+    # check if the bot was mentioned
+    if client.user in message.mentions:
+        # get the message content, remove the mention
+        text = message.content.replace('@RealBot', '').strip()
+        # if there's any text left, treat it as a command
+        if text:
+            await chat(message, text)
+        else:
+            await message.channel.send("You mentioned me. How can I assist you?")
+        return
+
+    # listen to any messages that start with '>>ask'
+    if message.content.startswith(">>ask"):
+        await chat(message)
+
+    # listen to any messages that start with '>>art'
+    if message.content.startswith(">>art"):
+        await art(message)
+
+    # listen to any messages that start with '>>apiart'
+    if message.content.startswith(">>apiart"):
+        await api_art(message)
 
 
 async def chat(message: discord.Message):
@@ -122,9 +181,6 @@ async def chat(message: discord.Message):
         await message.channel.send("Please provide a question using the >>ask command")
         return
 
-    # get reponse from openai's text-davinci-003 aka GPT-3
-    # You can play around with the filter to get a better result
-    # Visit https://beta.openai.com/docs/api-reference/completions/create for more info
     response = Completion.create(
         engine="text-davinci-003",
         prompt=text,
