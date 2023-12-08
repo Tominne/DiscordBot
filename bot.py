@@ -11,8 +11,7 @@ import base64
 from api_img import call_api_and_get_image_data
 from gay_commandments import pride_flags
 from gay_commandments import gay
-from meow import meow_listener
-from meow import meow_maker
+from meow import meow_listener, meow_maker
 from nsfw import boobs, cuddle, marry, marriages, list_marriages, divorce
 
 
