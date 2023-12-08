@@ -1,5 +1,11 @@
 import requests
 import json
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+api_art_key = os.getenv("API_ART_KEY")
 
 def call_api_and_get_image_data(art_type):
     url = "https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image"
@@ -26,7 +32,7 @@ def call_api_and_get_image_data(art_type):
     headers = {
       "Accept": "application/json",
       "Content-Type": "application/json",
-      "Authorization": "Bearer sk-56VX1jcrg02iwzHVJDGeshPmHYefB0Rq8fSa6uRYao4lw4lU",
+      "Authorization": f"Bearer {api_art_key}",
     }
 
     response = requests.post(
