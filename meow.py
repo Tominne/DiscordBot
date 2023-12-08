@@ -3,12 +3,12 @@ import random
 
 meow_strings = [ "meow", "mew", "mrew", "mrow", "mrrp", "purr"]
 
-def meow_listener(message: discord.Message):
+def meow_listener(meow_test):
     # Check if message looks like a meow
     activated = False
     
     # For simplicity, just check if message matches any in list
-    if any(message.content.lower() == s for s in meow_strings):
+    if any(meow_test.lower() == s for s in meow_strings):
         activated = True
 
     return activated
