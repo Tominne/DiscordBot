@@ -9,6 +9,8 @@ from arts import ascii_arts
 import io
 import base64
 from api_img import call_api_and_get_image_data
+from gay_commandments import pride_flags
+from gay_commandments import gay
 
 load_dotenv()
 
@@ -104,9 +106,6 @@ async def art(message: discord.Message):
 
     await message.channel.send(f"Here is your {art_type} art:\n```\n{art}\n```")
 
-
-
-
 async def api_art(message: discord.Message):
     # split the message content into command and art_type
     split_message = message.content.split(" ", maxsplit=1)
@@ -117,6 +116,9 @@ async def api_art(message: discord.Message):
         return
 
     command, art_type = split_message
+
+    # Join all the words after the command into a single string
+    art_type = ' '.join(art_type.split())
 
     try:
         # Call the API and get the image data
@@ -137,8 +139,12 @@ async def api_art(message: discord.Message):
             await message.channel.send("An error occurred: " + str(e))
 
 
+
     # Send the image
     await message.channel.send(file=image_file)
+
+last_emoji = None
+
 
 @client.event
 async def on_message(message: discord.Message):
@@ -171,6 +177,9 @@ async def on_message(message: discord.Message):
     # listen to any messages that start with '>>apiart'
     if message.content.startswith(">>apiart"):
         await api_art(message)
+
+    if message.content.startswith(">>gay") or message.content.startswith(">>queer") or message.content.startswith(">>lesbian") or message.content.startswith(">>fag") or message.content.startswith(">>homo"):
+        await gay(message)
 
 
 async def chat(message: discord.Message):
