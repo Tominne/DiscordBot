@@ -11,6 +11,8 @@ import base64
 from api_img import call_api_and_get_image_data
 from gay_commandments import pride_flags
 from gay_commandments import gay
+from nsfw import boobs, cuddle, marry, marriages, list_marriages
+
 
 load_dotenv()
 
@@ -180,6 +182,17 @@ async def on_message(message: discord.Message):
 
     if message.content.startswith(">>gay") or message.content.startswith(">>queer") or message.content.startswith(">>lesbian") or message.content.startswith(">>fag") or message.content.startswith(">>homo"):
         await gay(message)
+
+    if message.content.startswith(">>boobs"):
+        await boobs(message)
+
+    if message.content.startswith(">>cuddle"):
+        await cuddle(message)
+
+    if message.content.startswith(">>marry"):
+        await marry(message)
+    elif message.content.startswith(">>marriages"):
+        await list_marriages(message)
 
 
 async def chat(message: discord.Message):
