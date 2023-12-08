@@ -11,7 +11,7 @@ import base64
 from api_img import call_api_and_get_image_data
 from gay_commandments import pride_flags
 from gay_commandments import gay
-from nsfw import boobs, cuddle, marry, marriages, list_marriages
+from nsfw import boobs, cuddle, marry, marriages, list_marriages, divorce
 
 
 load_dotenv()
@@ -193,6 +193,8 @@ async def on_message(message: discord.Message):
         await marry(message)
     elif message.content.startswith(">>marriages"):
         await list_marriages(message)
+    elif message.content.startswith(">>divorce"):
+        await divorce(message)
 
 
 async def chat(message: discord.Message):
