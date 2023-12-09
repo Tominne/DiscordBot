@@ -17,6 +17,7 @@ from nsfw import boobs, cuddle, marry, marriages, list_marriages, divorce
 
 load_dotenv()
 
+
 TOKEN = getenv('DISCORD_TOKEN')
 aiKey = getenv('OPENAI_API_KEY')
 

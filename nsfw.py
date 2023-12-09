@@ -1,6 +1,12 @@
 import discord
+import json
 
-marriages = {}
+# Load marriages from file at start
+try:
+    with open('marriages.json', 'r') as f:
+        marriages = json.load(f)
+except FileNotFoundError:
+    marriages = {}
 
 async def boobs(message: discord.Message):
     await message.channel.send("(.) (.)")
@@ -37,12 +43,21 @@ async def marry(message: discord.Message):
 
     await message.channel.send(f"{message.author.mention} marries {username} :ring: :heart:")
 
+    # Save marriages to file after each command
+    with open('marriages.json', 'w') as f:
+        json.dump(marriages, f)
+
 async def list_marriages(message: discord.Message):
     # Check if the user is married
     if message.author.name in marriages:
         # Get the user's spouses
-        spouses = ', '.join(marriages[message.author.name])
-        await message.channel.send(f"{message.author.mention} is married to {spouses} :ring: :heart:")
+        spouses = marriages[message.author.name]
+        if len(spouses) > 1:
+            last_spouse = spouses.pop()
+            spouses_str = ', '.join(spouses) + ' and ' + last_spouse
+        else:
+            spouses_str = spouses[0]
+        await message.channel.send(f"{message.author.mention} is married to {spouses_str} :ring: :heart:")
     else:
         await message.channel.send(f"{message.author.mention}, you are not married.")
 
@@ -63,3 +78,7 @@ async def divorce(message: discord.Message):
         await message.channel.send(f"{message.author.mention} divorces {username} :broken_heart:")
     else:
         await message.channel.send(f"{message.author.mention}, you are not married to {username}.")
+
+    # Save marriages to file after each command
+    with open('marriages.json', 'w') as f:
+        json.dump(marriages, f)
