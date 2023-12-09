@@ -11,6 +11,7 @@ import base64
 from api_img import call_api_and_get_image_data
 from gay_commandments import pride_flags
 from gay_commandments import gay
+from meow import meow_listener, meow_maker
 from nsfw import boobs, cuddle, marry, marriages, list_marriages, divorce
 
 
@@ -189,6 +190,9 @@ async def on_message(message: discord.Message):
 
     if message.content.startswith(">>cuddle"):
         await cuddle(message)
+
+    if meow_listener(message):
+        await meow_maker(message)
 
     if message.content.startswith(">>marry"):
         await marry(message)
