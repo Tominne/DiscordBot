@@ -5,6 +5,7 @@ import discord
 from dotenv import load_dotenv
 from openai import Completion
 import random
+import asyncio
 from arts import ascii_arts
 import io
 import base64
@@ -13,8 +14,10 @@ from gay_commandments import pride_flags
 from gay_commandments import gay
 from meow import meow_listener, meow_maker
 from nsfw import boobs, cuddle, marry, marriages, list_marriages, divorce
+from collections import defaultdict
+from temp_messages import temp_messages, count_user_messages, send_temp_messages
 
-
+message_stats = defaultdict(int)
 load_dotenv()
 
 
@@ -48,6 +51,7 @@ async def on_message(message: discord.Message):
     # ignore messages from the bot itself
     if message.author == client.user:
         return 
+  
 
     # check if the bot was mentioned
     if client.user in message.mentions:
@@ -158,6 +162,8 @@ async def on_message(message: discord.Message):
     # ignore messages from the bot itself
     if message.author == client.user:
         return 
+    
+    message_stats[message.author.id] += 1
 
     # check if the bot was mentioned
     if client.user in message.mentions:
@@ -194,12 +200,30 @@ async def on_message(message: discord.Message):
     if meow_listener(message):
         await meow_maker(message)
 
+    #Marriage code
     if message.content.startswith(">>marry"):
         await marry(message)
     elif message.content.startswith(">>marriages"):
         await list_marriages(message)
     elif message.content.startswith(">>divorce"):
         await divorce(message)
+
+    #stats message counter
+    if message.content.startswith(">>stats"):
+   
+    # Shuffle the list
+         random.shuffle(temp_messages)
+    # Start the tasks
+         count_task = asyncio.create_task(count_user_messages(message.channel, message.author))
+         temp_messages_task = asyncio.create_task(send_temp_messages(message.channel, temp_messages))
+    # Wait for the counting task to finish and get the result
+         counter = await count_task
+    # Cancel the task that sends the temporary messages
+         temp_messages_task.cancel()
+    # Send the final count
+         await message.channel.send(f"You have sent {counter} messages in this channel.")
+
+
 
 
 async def chat(message: discord.Message):
@@ -223,6 +247,8 @@ async def chat(message: discord.Message):
     response_text = response["choices"][0]["text"]
 
     await message.channel.send(response_text)
+
+
 
 # start the bot
 client.run(TOKEN)
