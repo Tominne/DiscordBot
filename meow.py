@@ -1,7 +1,7 @@
 import discord
 import random
 
-meow_strings = [ "meow", "mew", "mrew", "mrow", "mrrp", "purr"]
+meow_strings = ["meow", "mew", "mrew", "mrow", "mrrp", "purr", "mewo", "mow"]
 last_meow = None
 
 def meow_listener(message):
@@ -18,7 +18,7 @@ def meow_listener(message):
 async def meow_maker(message: discord.Message):
     global last_meow
 
-    probability = 0.25 # chance of meowing
+    probability = 0.33 # chance of meowing
     if random.random() > probability:
         return
 
