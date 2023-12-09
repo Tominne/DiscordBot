@@ -17,7 +17,7 @@ def meow_listener(meow_test):
 async def meow_maker(message: discord.Message):
     global last_meow
 
-    probability = 1.0 # chance of meowing
+    probability = 0.25 # chance of meowing
     if random.random() > probability:
         return
 
