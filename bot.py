@@ -182,7 +182,7 @@ async def on_message(message: discord.Message):
     if message.content.startswith(">>apiart"):
         await api_art(message)
 
-    if message.content.startswith(">>gay") or message.content.startswith(">>queer") or message.content.startswith(">>lesbian") or message.content.startswith(">>fag") or message.content.startswith(">>homo"):
+    if message.content.startswith(">>gay") or message.content.startswith(">>queer") or message.content.startswith(">>lesbian") or message.content.startswith(">>homo"):
         await gay(message)
 
     if message.content.startswith(">>boobs"):
