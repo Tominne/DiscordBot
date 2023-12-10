@@ -16,7 +16,11 @@ from meow import meow_listener, meow_maker
 from nsfw import boobs, cuddle, marry, marriages, list_marriages, divorce
 from collections import defaultdict
 from temp_messages import temp_messages, count_user_messages, send_temp_messages
-from stats import count_unique_words
+from stats import count_unique_words, preload_data
+from discord.ext import commands
+
+
+data_loaded = False
 
 message_stats = defaultdict(int)
 load_dotenv()
@@ -30,29 +34,40 @@ openai.api_key = aiKey
 intents = discord.Intents.default()
 intents.message_content = True
 
-client = discord.Client(command_prefix='@RealBot', intents=intents)
+bot = commands.Bot(command_prefix='>>', intents=intents)
 
-@client.event
+@bot.event
+async def on_message(message):
+    # your code here
+
+    ctx = await bot.get_context(message)
+    await preload_data(ctx)
+    print(f"Server data loaded")
+
+    await bot.process_commands(message)
+
+@bot.event
 async def on_ready():
     """
     Print a message when the bot is ready
     """
-    print(f"We have logged in as {client.user}")
+    print(f"We have logged in as {bot.user}")
+    
 
 PREFIX = "!"
 
-@client.event
+@bot.event
 async def on_message(message: discord.Message):
     """
     Listen to message event
     """
     # ignore messages from the bot itself
-    if message.author == client.user:
+    if message.author == bot.user:
         return 
   
 
     # check if the bot was mentioned
-    if client.user in message.mentions:
+    if bot.user in message.mentions:
         # get the message content, remove the mention
         text = message.content.replace('@RealBot', '').strip()
         # if there's any text left, treat it as a command
@@ -152,19 +167,19 @@ async def api_art(message: discord.Message):
 last_emoji = None
 
 
-@client.event
+@bot.event
 async def on_message(message: discord.Message):
     """
     Listen to message event
     """
     # ignore messages from the bot itself
-    if message.author == client.user:
+    if message.author == bot.user:
         return 
     
     message_stats[message.author.id] += 1
 
     # check if the bot was mentioned
-    if client.user in message.mentions:
+    if bot.user in message.mentions:
         # get the message content, remove the mention
         text = message.content.replace('@RealBot', '').strip()
         # if there's any text left, treat it as a command
@@ -206,7 +221,8 @@ async def on_message(message: discord.Message):
     elif message.content.startswith(">>divorce"):
         await divorce(message)
 
-    #stats message counter
+
+        
     if message.content.startswith(">>stats"):
    
     # Shuffle the list
@@ -221,8 +237,10 @@ async def on_message(message: discord.Message):
     # Send the final count
          await message.channel.send(f"You have sent {counter} messages in this channel.")
     elif message.content.startswith(">>words"):
-        await count_unique_words(message)
-
+        if data_loaded:
+          await count_unique_words(message)
+        else: 
+            await message.channel.send("Data loading, please try again in 10 minutes")
 
 
 
@@ -251,4 +269,4 @@ async def chat(message: discord.Message):
 
 
 # start the bot
-client.run(TOKEN)
+bot.run(TOKEN)
