@@ -36,15 +36,6 @@ intents.message_content = True
 
 bot = commands.Bot(command_prefix='>>', intents=intents)
 
-@bot.event
-async def on_message(message):
-    # your code here
-
-    ctx = await bot.get_context(message)
-    await preload_data(ctx)
-    print(f"Server data loaded")
-
-    await bot.process_commands(message)
 
 @bot.event
 async def on_ready():
@@ -84,6 +75,14 @@ async def on_message(message: discord.Message):
     # listen to any messages that start with '>>art'
     if message.content.startswith(">>art"):
         await art(message)
+
+    if message.content.startswith('>>charge'):
+        ctx = await bot.get_context(message)
+        print(f"charging")
+        await preload_data(ctx)
+        print(f"Server data loaded")
+
+    await bot.process_commands(message)
 
 async def chat(message: discord.Message, text=None):
     if text is None:
