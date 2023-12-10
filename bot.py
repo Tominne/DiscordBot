@@ -16,6 +16,7 @@ from meow import meow_listener, meow_maker
 from nsfw import boobs, cuddle, marry, marriages, list_marriages, divorce
 from collections import defaultdict
 from temp_messages import temp_messages, count_user_messages, send_temp_messages
+from stats import count_unique_words
 
 message_stats = defaultdict(int)
 load_dotenv()
@@ -25,9 +26,6 @@ TOKEN = getenv('DISCORD_TOKEN')
 aiKey = getenv('OPENAI_API_KEY')
 
 openai.api_key = aiKey
-
-
-print("OpenAI Key:", aiKey)
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -222,6 +220,8 @@ async def on_message(message: discord.Message):
          temp_messages_task.cancel()
     # Send the final count
          await message.channel.send(f"You have sent {counter} messages in this channel.")
+    elif message.content.startswith(">>words"):
+        await count_unique_words(message)
 
 
 
