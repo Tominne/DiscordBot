@@ -20,8 +20,6 @@ from stats import count_unique_words, preload_data
 from discord.ext import commands
 
 
-data_loaded = False
-
 message_stats = defaultdict(int)
 load_dotenv()
 
@@ -111,9 +109,11 @@ async def on_message(message: discord.Message):
     
     if message.content.startswith(">>charge"):
         print(f"charging")
+        await message.channel.send('Charging...')
         ctx = await bot.get_context(message)
         await preload_data(ctx)
         print(f"Server data loaded")
+        data_loaded = True
 
     # listen to any messages that start with '>>ask'
     if message.content.startswith(">>ask"):
@@ -133,7 +133,7 @@ async def on_message(message: discord.Message):
     if message.content.startswith(">>boobs"):
         await boobs(message)
 
-    if message.content.startswith(">>cuddle"):
+    if message.content.startswith(">>cuddle") or message.content.startswith(">>hug"):
         await cuddle(message)
 
     if meow_listener(message):
@@ -163,11 +163,10 @@ async def on_message(message: discord.Message):
     # Send the final count
          await message.channel.send(f"You have sent {counter} messages in this channel.")
     elif message.content.startswith(">>words"):
-        if data_loaded:
-          await count_unique_words(message)
-        else: 
-            await message.channel.send("Data loading, please try again in 10 minutes")
-
+          ctx = await bot.get_context(message)
+          await message.channel.send('Counting...')
+          await count_unique_words(ctx, message.author.id)
+        
 
 
 async def chat(message: discord.Message):
