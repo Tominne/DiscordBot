@@ -290,6 +290,9 @@ async def fetch_NSFW_user_messages(user_id, guild_id, start, end):
         print(f"Failed to fetch history from user {user_id}. Error: {e}")
         return []
 
+import random
+from spice import spicy_words
+
 
 async def calculate_NSFW_tfidf(user_id, guild_id, chunk_size=1000):
     vectorizer = TfidfVectorizer(stop_words=common_words)
@@ -299,13 +302,15 @@ async def calculate_NSFW_tfidf(user_id, guild_id, chunk_size=1000):
     while True:
         user_messages = await fetch_NSFW_user_messages(user_id, guild_id, start, start + chunk_size)
         if not user_messages:
-            break
+            return random.sample(spicy_words, 15)
+       
 
         # Log the number of messages fetched
         logger.info(f"Fetched {len(user_messages)} messages for user {user_id} in guild {guild_id}")
 
         # Preprocess user_messages
         user_messages = [str(msg) for msg in user_messages if msg and msg.strip()]
+
 
         try:
             # Run fit_transform in a separate thread
@@ -318,14 +323,13 @@ async def calculate_NSFW_tfidf(user_id, guild_id, chunk_size=1000):
         except ValueError:
             print(f"No valid words to count in here {start} to {start + chunk_size}")
 
-        start += chunk_size
+        if word_tfidf_sum is not None:
+          sorted_words = word_tfidf_sum.sort_values(ascending=False)
+          top_15_words = sorted_words.head(15).index.tolist()
+          return top_15_words
+        else:
+          return random.sample(spicy_words, 15)
 
-    if word_tfidf_sum is not None:
-        sorted_words = word_tfidf_sum.sort_values(ascending=False)
-        top_15_words = sorted_words.head(15).index.tolist()
-        return top_15_words
-    else:
-        return []
     
 @bot.command()
 async def count_unique_words(ctx, user_id: str, guild_id: str):
