@@ -3,7 +3,7 @@ from os import getenv
 import openai
 import discord
 from dotenv import load_dotenv
-from openai import Completion
+from openai import OpenAI
 import random
 import asyncio
 from arts import ascii_arts, art
@@ -16,7 +16,7 @@ from meow import meow_listener, meow_maker
 from nsfw import boobs, cuddle, marry, marriages, list_marriages, divorce
 from collections import defaultdict
 from temp_messages import temp_messages, count_user_messages, send_temp_messages
-from stats import count_unique_words, preload_data
+from stats import count_unique_words, preload_data, update_data, count_unique_NSFW_words
 from discord.ext import commands
 
 
@@ -26,8 +26,8 @@ load_dotenv()
 
 TOKEN = getenv('DISCORD_TOKEN')
 aiKey = getenv('OPENAI_API_KEY')
+client = OpenAI(api_key=aiKey)
 
-openai.api_key = aiKey
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -165,7 +165,14 @@ async def on_message(message: discord.Message):
     elif message.content.startswith(">>words"):
           ctx = await bot.get_context(message)
           await message.channel.send('Counting...')
-          await count_unique_words(ctx, message.author.id)
+          await count_unique_words(ctx, message.author.id, ctx.guild.id)
+    elif message.content.startswith(">>spicy"):
+          ctx = await bot.get_context(message)
+          await message.channel.send('Counting...')
+          await count_unique_NSFW_words(ctx, message.author.id, ctx.guild.id)
+    elif message.content.startswith(">>update"):
+        ctx = await bot.get_context(message)
+        await update_data(ctx)
         
 
 
@@ -177,14 +184,12 @@ async def chat(message: discord.Message):
         await message.channel.send("You mentioned me. How can I assist you? Try using: >>art, >>apiart, >>stats, >>charge, or >>words")
         return
 
-    response = Completion.create(
-        engine="text-davinci-003",
-        prompt=text,
-        temperature=0.8,
-        max_tokens=512,
-        top_p=1,
-        logprobs=10,
-    )
+    response = client.completions.create(engine="text-davinci-003",
+    prompt=text,
+    temperature=0.8,
+    max_tokens=512,
+    top_p=1,
+    logprobs=10)
 
     # Extract the response from the API response
     response_text = response["choices"][0]["text"]
