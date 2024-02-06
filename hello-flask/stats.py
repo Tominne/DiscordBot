@@ -8,6 +8,12 @@ import discord
 import sqlite3
 import pandas as pd
 import logging
+import datetime
+from bot_training import preprocess_data
+from stopwordsCustom import common_words
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+
 
 
 intents = discord.Intents.default()
@@ -23,7 +29,7 @@ emoji_pattern = re.compile(pattern = "["
         u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
                            "]+", flags = re.UNICODE)
 
-common_words = ["the", "ve", "ll", "divorce", "stats", "marriage", "chance", "marriages", "apiart", "words", "art", "charge", "had", "being", "right", "don", "they", "re", "you", "oh", "too", "yes", "no", "add", "nice", "im", "has", "hi", "did", "emoji", "ever", "am", "lol", "was", "is", "are", "be", "to", "of", "and", "a", "in", "that", "have", "I", "it", "for", "not", "on", "with", "he", "as", "you", "do", "at", "this", "but", "his", "by", "from", "they", "we", "say", "her", "she", "or", "an", "will", "my", "one", "all", "would", "there", "their", "what", "so", "up", "out", "if", "about", "who", "get", "which", "go", "me", "when", "make", "can", "like", "time", "no", "just", "him", "know", "take", "people", "into", "year", "your", "good", "some", "could", "them", "see", "other", "than", "then", "now", "look", "only", "come", "its", "over", "think", "also", "back", "after", "use", "two", "how", "our", "work", "first", "well", "way", "even", "new", "want", "because", "any", "these", "give", "day", "most", "us"]
+
 
 url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
 
@@ -41,35 +47,35 @@ with connect:
     
 
 
-# Define a function to fetch user messages from Discord
+
 async def fetch_discord_messages(guild):
     all_messages = {}
+    stop_words = set(stopwords.words('english'))
     for channel in guild.text_channels:
-        # Check if the bot has the permission to read messages
         if channel.permissions_for(guild.me).read_messages:
             try:
                 async for message in channel.history(limit=None):
-                    # Preprocess the message content
+                    # Ignore bot messages and messages starting with '>>'
+                    if message.author.bot or message.content.startswith('>>'):
+                        continue
+
                     message_without_urls = url_pattern.sub('', message.content)
                     message_without_numbers = number_pattern.sub('', message_without_urls)
                     message_without_emoji_starting_words = ' '.join(word for word in message_without_numbers.split() if not word.startswith('emoji'))
-                    # Exclude common words
                     message_without_common_words = ' '.join(word for word in message_without_emoji_starting_words.split() if word.lower() not in common_words)
-                    # Exclude emojis
-                    message_without_emojis = emoji_pattern.sub('', message_without_common_words)
-                    
+                    preprocessed_message = ' '.join(word for word in message_without_common_words.split() if word.lower() not in stop_words)
+
                     # Add the message to the corresponding user's messages
                     if str(message.author.id) not in all_messages:
-                        all_messages[str(message.author.id)] = [(message_without_emojis + ' ', channel.id, [message.id])]  
+                        all_messages[str(message.author.id)] = [(preprocessed_message, channel.id, [message.id])]  
                     else:
-                        all_messages[str(message.author.id)].append((message_without_emojis + ' ', channel.id, [message.id])) 
+                        all_messages[str(message.author.id)].append((preprocessed_message, channel.id, [message.id])) 
             except discord.NotFound:
-                # The channel or the message does not exist
                 print(f"Failed to fetch history from channel {channel.name}, channel or message not found.")
             except discord.HTTPException:
-                # An HTTP request failed
                 print(f"Failed to fetch history from channel {channel.name}, HTTP request failed.")
     return all_messages
+
 
 
 @bot.command()
@@ -81,6 +87,7 @@ async def preload_data(ctx):
         curs = connect.cursor()
         curs.execute("SELECT DISTINCT GuildID FROM DiscordData WHERE GuildID = ? LIMIT 1", (guild.id,))
         data = curs.fetchone()
+        print(data)
 
     # If data is not None, it means data is already loaded
     if data is not None:

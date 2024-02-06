@@ -18,7 +18,15 @@ from collections import defaultdict
 from temp_messages import temp_messages, count_user_messages, send_temp_messages
 from stats import count_unique_words, preload_data, update_data, count_unique_NSFW_words
 from discord.ext import commands
+#from seq2seq import getTestInput, idsToSentence, encoderInputs, wordList, maxEncoderLength, decoderPrediction
+import sqlite3
+import tensorflow as tf
 
+sess = tf.compat.v1.Session()
+
+
+intents = discord.Intents.default()
+intents.message_content = True
 
 message_stats = defaultdict(int)
 load_dotenv()
@@ -33,14 +41,23 @@ intents = discord.Intents.default()
 intents.message_content = True
 
 bot = commands.Bot(command_prefix=commands.when_mentioned_or('>>'), intents=intents)
+# Connect to the SQL file
+connect = sqlite3.connect('user_messages.sql')
+
+# Create a table if it does not exist
+with connect:
+    connect.execute("CREATE TABLE IF NOT EXISTS DiscordData (UserID TEXT, Code TEXT, GuildID TEXT, ChannelID TEXT, Word TEXT, Frequency INTEGER, MessageID INTEGER)")
+    
 
 
 @bot.event
 async def on_ready():
-    """
-    Print a message when the bot is ready
-    """
+    
+    with connect:
+        curs = connect.cursor()
     print(f"We have logged in as {bot.user}")
+
+    
     
 
 PREFIX = ">>"
@@ -146,6 +163,45 @@ async def on_message(message: discord.Message):
         await list_marriages(message)
     elif message.content.startswith(">>divorce"):
         await divorce(message)
+    
+    morning_messages = [
+    "Good morning, I'm awake!",
+    "Rise and shine!",
+    "Top of the morning to you!",
+    "Wakey, wakey, eggs and bakey!",
+    "Morning sunshine!",
+    "Hello world, I'm up!",
+    "Ready for a new day!",
+    "Time to seize the day!",
+    "Let's make today great!",
+    "Up and at 'em!",
+    "Let's get this day started!",
+    "Good morning, let's roll!",
+    "Time to rise and grind!",
+    "A new day has begun!",
+    "Ready to make the most of today!",
+    "Good morning, time to shine!",
+    "Hello, beautiful morning!",
+    "Time to wake up and be awesome!",
+    "Good morning, let's do this!",
+    "Rise and sparkle!",
+    "Hello, new day!",
+    "Good morning, bring on the coffee!",
+    "Time to rise and be amazing!",
+    "Good morning, let's make today count!",
+    "Ready to embrace the day!",
+    "Good morning, let's get moving!",
+    "Hello, let's make today fantastic!",
+    "Rise and thrive!",
+    "Good morning, let's conquer the day!",
+    "Time to wake up and chase our dreams!",
+    "Good morning, let's make magic happen!"
+]
+
+    morning_message = random.choice(morning_messages)
+    if message.content == '>>awake?':
+        await message.channel.send(morning_message)
+        
 
 
         
@@ -174,14 +230,27 @@ async def on_message(message: discord.Message):
         ctx = await bot.get_context(message)
         await update_data(ctx)
         
-
+"""@bot.command()
+async def chat(ctx, *, message):
+    # Preprocess the message
+    inputVector = getTestInput(message, wordList, maxEncoderLength)
+    
+    # Generate a response
+    feedDict = {encoderInputs[t]: inputVector[t] for t in range(maxEncoderLength)}
+    ids = (sess.run(decoderPrediction, feed_dict=feedDict))
+    
+    # Convert the response to a string
+    response = idsToSentence(ids, wordList)
+    
+    # Send the response
+    await ctx.send(response)"""
 
 async def chat(message: discord.Message):
     try:
         # get the prompt from the messsage by spliting the command
         command, text = message.content.split(" ", maxsplit=1)
     except ValueError:
-        await message.channel.send("You mentioned me. How can I assist you? Try using: >>art, >>apiart, >>stats, >>charge, or >>words")
+        await message.channel.send("You mentioned me. How can I assist you? Try using: >>art, >>update, >>boobs, >>gay, >>marriage, >>apiart, >>stats, >>charge, or >>words")
         return
 
     response = client.completions.create(engine="text-davinci-003",

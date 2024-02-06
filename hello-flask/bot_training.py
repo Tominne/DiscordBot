@@ -2,14 +2,15 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import nltk
-import nltk
 nltk.download('punkt')
 nltk.download('stopwords')
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from nltk.tokenize import word_tokenize
 import sqlite3
-from torch.utils.data import DataLoader
+
+
+
 
 # Define the Language Model
 class LanguageModel(nn.Module):
@@ -31,11 +32,10 @@ def preprocess_data(messages):
     for message in messages:
         tokens = word_tokenize(message)
         lowercase_tokens = [word.lower() for word in tokens]
-        stop_words = set(stopwords.words('english'))
+        stop_words = stopwords.words('english')
         trimmed_tokens = [word for word in lowercase_tokens if not word in stop_words]
-        stemmer = PorterStemmer()
-        processed_tokens.extend([stemmer.stem(word) for word in trimmed_tokens])
-    return processed_tokens
+        processed_tokens.append(' '.join(trimmed_tokens))
+    return (processed_tokens)
 
 # Load the Data
 def load_data():

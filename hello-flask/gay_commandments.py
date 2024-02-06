@@ -3,6 +3,8 @@ import random
 
 pride_flags = [ "🖤🤎❤️🧡💛💚💙💜", "🏳️‍🌈", "🏳️‍⚧️", "⚧️", "👭", "👬", "💏‍👩‍❤️‍💋‍👩", "💏‍👨‍❤️‍💋‍👨", "👩‍❤️‍👩", "👨‍❤️‍👨", "❤️‍🔥"]
 
+last_emoji = ""
+
 async def gay(message: discord.Message):
     global last_emoji
     # select a random pride flag from the list
