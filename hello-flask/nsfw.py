@@ -49,7 +49,7 @@ async def marry(message: discord.Message):
 
 async def list_marriages(message: discord.Message):
     # Check if the user is married
-    if message.author.name in marriages:
+    if message.author.name in marriages and marriages[message.author.name]:
         # Get the user's spouses
         spouses = marriages[message.author.name]
         if len(spouses) > 1:
@@ -58,6 +58,8 @@ async def list_marriages(message: discord.Message):
         else:
             spouses_str = spouses[0]
         await message.channel.send(f"{message.author.mention} is married to {spouses_str} :ring: :heart:")
+    elif message.author.name in marriages:
+        await message.channel.send(f"{message.author.mention}, no bitches?")
     else:
         await message.channel.send(f"{message.author.mention}, you are not married.")
 

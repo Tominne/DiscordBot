@@ -45,6 +45,32 @@ connect = sqlite3.connect('user_messages.sql')
 with connect:
     connect.execute("CREATE TABLE IF NOT EXISTS DiscordData (UserID TEXT, Code TEXT, GuildID TEXT, ChannelID TEXT, Word TEXT, Frequency INTEGER, MessageID INTEGER)")
     
+import json
+
+@bot.command()
+async def json_user_messages(ctx, user: discord.User):
+    guild = ctx.guild
+    all_messages = []
+
+    # Fetch all messages in the guild
+    for channel in guild.text_channels:
+        async for message in channel.history(limit=None):
+            # Add each message to the list with the appropriate role
+            role = "assistant" if message.author == ctx.bot.user else "user"
+            all_messages.append({"role": role, "content": message.content})
+
+    # Write all messages to a .jsonl file
+    with open(f'{guild.id}_messages.jsonl', 'w') as f:
+        chat = []
+        for message in all_messages:
+            chat.append(message)
+            if message['role'] == 'assistant':
+                f.write(json.dumps({"messages": chat}) + '\n')
+                chat = []
+
+    await ctx.send(f"{user.name} has been jsonified.")
+
+
 
 
 

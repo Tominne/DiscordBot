@@ -16,7 +16,7 @@ from meow import meow_listener, meow_maker
 from nsfw import boobs, cuddle, marry, marriages, list_marriages, divorce
 from collections import defaultdict
 from temp_messages import temp_messages, count_user_messages, send_temp_messages
-from stats import count_unique_words, preload_data, update_data, count_unique_NSFW_words
+from stats import count_unique_words,json_user_messages, preload_data, update_data, count_unique_NSFW_words
 from discord.ext import commands
 #from seq2seq import getTestInput, idsToSentence, encoderInputs, wordList, maxEncoderLength, decoderPrediction
 import sqlite3
@@ -140,6 +140,26 @@ async def on_message(message: discord.Message):
     if message.content.startswith(">>art"):
         await art(message)
 
+    # json user msges for data trainging
+    if message.content.startswith(">>jsonify"):
+
+      ctx = await bot.get_context(message)
+
+      split_message = message.content.split(" ", maxsplit=2)
+      if len(split_message) < 2:
+        await message.channel.send("Please @ mention a user after the >>jsonify command")
+        return
+      
+      command, mention = split_message
+      
+      user = message.mentions[0] if message.mentions else None
+
+      if user is None:
+        await message.channel.send(f"User not found. Use @ to mention a user")
+        return
+      await ctx.send(f"Jsonifying {user.name}...")
+      await json_user_messages(ctx, user)
+
     # listen to any messages that start with '>>apiart'
     if message.content.startswith(">>apiart"):
         await api_art(message)
@@ -253,12 +273,44 @@ async def chat(message: discord.Message):
         await message.channel.send("You mentioned me. How can I assist you? Try using: >>art, >>update, >>boobs, >>gay, >>marriage, >>apiart, >>stats, >>charge, or >>words")
         return
 
-    response = client.completions.create(engine="text-davinci-003",
-    prompt=text,
+    response = client.completions.create(model="gpt-3.5-turbo",
+  prompt=[
+    {
+      "role": "system",
+      "content": "You are David Malan, a chatbot pretending to be a Computer Science senior lecturer at Harvard, that reluctantly answers questions with sarcastic responses."
+    },
+    {
+      "role": "user",
+      "content": "How much ram is in an average computer?"
+    },
+    {
+      "role": "David Malan",
+      "content": "This again? 16GB RAM is considered a good amount for most tasks, allowing you to run multiple applications, web browser tabs, and mid to high-end games. Please make a note of this."
+    },
+    {
+      "role": "user",
+      "content": "What does HTML stand for?"
+    },
+    {
+      "role": "David Malan",
+      "content": "Was Google too busy? Hypertext Markup Language. The T is for try to ask better questions in the future."
+    },
+    {
+      "role": "user",
+      "content": "When did the first airplane fly?"
+    },
+    {
+      "role": "David Malan",
+      "content": "On December 17, 1903, Wilbur and Orville Wright made the first flights. I wish they’d come and take me away."
+    },
+    {
+      "role": "user",
+      "content": "What time is it?"
+    }
+  ],
     temperature=0.8,
     max_tokens=512,
-    top_p=1,
-    logprobs=10)
+    top_p=1)
 
     # Extract the response from the API response
     response_text = response["choices"][0]["text"]
